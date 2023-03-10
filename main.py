@@ -65,13 +65,20 @@ def get_info(url):
 
 
 def plot_single_unit(
-    df, column_name, label, descriptor, team_name, plot_color, fotmob_id
+    df, column_name, label, descriptor, team_name, plot_color, fotmob_id, competition
 ):
+    comp_description = "All Competitions"
+    if competition == "pl":
+        comp_description = "Premier League"
+
     df = df[["Player", column_name]]
     df = df[~df[column_name].isna()]
     df[column_name] = df[column_name].astype(int)
     df = df[df[column_name] != 0]
     df = df.sort_values(column_name)
+
+    if fotmob_id == 47:
+        df = df.tail(30)
 
     fig = plt.figure(figsize=(8, 10), dpi=300, facecolor="#EFE9E6")
     ax = plt.subplot()
@@ -82,7 +89,7 @@ def plot_single_unit(
     ax.spines["left"].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.set_title(
-        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 Premier League",
+        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 {comp_description}",
         fontweight="bold",
         fontsize=12,
     )
@@ -105,7 +112,7 @@ def plot_single_unit(
     annotate_axis(ax)
 
     save_figure(
-        f"figures/pl/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
+        f"figures/{competition}/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
         300,
         False,
         "#EFE9E6",
@@ -115,13 +122,20 @@ def plot_single_unit(
     plt.close()
 
 
-def plot_stacked(df, column_name, label, descriptor, team_name, fotmob_id):
+def plot_stacked(df, column_name, label, descriptor, team_name, fotmob_id, competition):
+    comp_description = "All Competitions"
+    if competition == "pl":
+        comp_description = "Premier League"
+
     df = df[~df[column_name].isna()]
     df[column_name] = df[column_name].astype(int)
     df["Gls"] = df["Gls"].astype(int)
     df["Ast"] = df["Ast"].astype(int)
     df = df[df[column_name] != 0]
     df = df.sort_values(column_name)
+
+    if fotmob_id == 47:
+        df = df.tail(30)
 
     players = df.Player.values.tolist()
     goals = df.Gls.values.tolist()
@@ -136,7 +150,7 @@ def plot_stacked(df, column_name, label, descriptor, team_name, fotmob_id):
     ax.spines["left"].set_visible(False)
     ax.get_xaxis().set_ticks([])
     ax.set_title(
-        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 Premier League",
+        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 {comp_description}",
         fontweight="bold",
         fontsize=12,
     )
@@ -189,7 +203,7 @@ def plot_stacked(df, column_name, label, descriptor, team_name, fotmob_id):
     annotate_axis(ax)
 
     save_figure(
-        f"figures/pl/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
+        f"figures/{competition}/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
         300,
         False,
         "#EFE9E6",
@@ -210,38 +224,61 @@ def main():
         fbref_id = TEAMS[team_name]["fbref_id"]
         fotmob_id = TEAMS[team_name]["fotmob_id"]
 
-        # pl = pl_url.format(fbref_id=fbref_id, team_name=team_name)
-        # comps_url = comps_url.format(fbref_id=fbref_id, team_name=team_name)
-
         df_pl = get_info(pl_url.format(fbref_id=fbref_id, team_name=team_name))
         df_pl.drop(df_pl.tail(2).index, inplace=True)
         df_comps = get_info(comps_url.format(fbref_id=fbref_id, team_name=team_name))
         pl_list.append(df_pl)
         comps_list.append(df_comps)
         plot_single_unit(
-            df_pl, "Gls", "Goals", "Scored", team_name, "#C4961A", fotmob_id
+            df_pl, "Gls", "Goals", "Scored", team_name, "#C4961A", fotmob_id, "pl"
         )
         plot_single_unit(
-            df_pl, "Ast", "Assists", "Provided", team_name, "cadetblue", fotmob_id
+            df_pl, "Ast", "Assists", "Provided", team_name, "cadetblue", fotmob_id, "pl"
         )
         plot_stacked(
-            df_pl, "G+A", "Goals + Assists", "Leaderboard", team_name, fotmob_id
+            df_pl, "G+A", "Goals + Assists", "Leaderboard", team_name, fotmob_id, "pl"
         )
-        #     num_games = get_matches(url_game)
-        #     df_players["club_id"] = fotmob_id
-        #     df_list.append(df_players)
-        #     df_players = format_data(df_players)
-        #     plot_data(df_players, team_name, num_games, fotmob_id)
 
-    # df_teams = pd.concat(df_list, axis=0, ignore_index=True)
-    # df = format_data_all(df_teams)
-    # plot_data_all(df)
+        plot_single_unit(
+            df_comps, "Gls", "Goals", "Scored", team_name, "#C4961A", fotmob_id, "comps"
+        )
+        plot_single_unit(
+            df_comps,
+            "Ast",
+            "Assists",
+            "Provided",
+            team_name,
+            "cadetblue",
+            fotmob_id,
+            "comps",
+        )
+        plot_stacked(
+            df_comps,
+            "G+A",
+            "Goals + Assists",
+            "Leaderboard",
+            team_name,
+            fotmob_id,
+            "comps",
+        )
+
+    df_pl = pd.concat(pl_list, axis=0, ignore_index=True)
+    df_comps = pd.concat(comps_list, axis=0, ignore_index=True)
+    plot_single_unit(df_pl, "Gls", "Goals", "Scored", "All Teams", "#C4961A", 47, "pl")
+    plot_single_unit(
+        df_pl, "Ast", "Assists", "Provided", "All Teams", "cadetblue", 47, "pl"
+    )
+    plot_stacked(df_pl, "G+A", "Goals + Assists", "Leaderboard", "All Teams", 47, "pl")
+    plot_single_unit(
+        df_comps, "Gls", "Goals", "Scored", "All Teams", "#C4961A", 47, "comps"
+    )
+    plot_single_unit(
+        df_comps, "Ast", "Assists", "Provided", "All Teams", "cadetblue", 47, "comps"
+    )
+    plot_stacked(
+        df_comps, "G+A", "Goals + Assists", "Leaderboard", "All Teams", 47, "comps"
+    )
 
 
 if __name__ == "__main__":
     main()
-
-
-# Add legend
-# Plot all teams together for goals, assists and g+a
-# Repeat for all comps
