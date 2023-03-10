@@ -40,12 +40,14 @@ def get_info(url):
     return df
 
 
-def plot_goals(df):
-    df = df[["Player", "Gls"]]
-    df = df[~df["Gls"].isna()]
-    df["Gls"] = df["Gls"].astype(int)
-    df = df[df["Gls"] != 0]
-    df = df.sort_values("Gls")
+def plot_single_unit(
+    df, column_name, label, descriptor, team_name, plot_color, fotmob_id
+):
+    df = df[["Player", column_name]]
+    df = df[~df[column_name].isna()]
+    df[column_name] = df[column_name].astype(int)
+    df = df[df[column_name] != 0]
+    df = df.sort_values(column_name)
 
     fig = plt.figure(figsize=(8, 10), dpi=300, facecolor="#EFE9E6")
     ax = plt.subplot()
@@ -55,30 +57,26 @@ def plot_goals(df):
     ax.spines["bottom"].set_visible(False)
     ax.spines["left"].set_visible(False)
     ax.get_xaxis().set_ticks([])
-    ax.set_xlabel("Goals Scored", fontweight="bold")
-    ax.barh(df["Player"], df["Gls"], align="center", color="#C4961A")
-    for index, value in enumerate(df["Gls"]):
+    ax.set_title(
+        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 Premier League",
+        fontweight="bold",
+        fontsize=12,
+    )
+    ax.set_xlabel(f"{label} {descriptor}", fontweight="bold")
+    ax.barh(df["Player"], df[column_name], align="center", color=plot_color)
+    increment_value = df[column_name].iloc[0] * 0.02
+    for index, value in enumerate(df[column_name]):
         plt.text(
-            value + 0.2,
+            value + increment_value,
             index,
             str(value),
-            color="#C4961A",
+            color=plot_color,
             va="center",
             fontweight="bold",
         )
 
     logo_ax = fig.add_axes([0.60, 0.2, 0.2, 0.2])
-    ax_logo(10260, logo_ax)
-
-    fig.text(
-        x=0.1,
-        y=0.87,
-        s="Manchester United Goals Scored 2022/2023 Premier League",
-        ha="left",
-        va="bottom",
-        weight="bold",
-        size=12,
-    )
+    ax_logo(fotmob_id, logo_ax)
 
     ax.annotate(
         "Stats from fbref.com",
@@ -100,12 +98,14 @@ def plot_goals(df):
     )
 
     save_figure(
-        "test.png",
+        f"figures/pl/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
         300,
         False,
         "#EFE9E6",
         "tight",
     )
+
+    plt.close()
 
 
 def main():
@@ -116,27 +116,28 @@ def main():
     comps_list = []
 
     for team_name in TEAMS:
-        # fbref_id = TEAMS[team_name]["fbref_id"]
-        # fotmob_id = TEAMS[team_name]["fotmob_id"]
-        fbref_id = 19538871
-        team_name = "Manchester-United"
-        fotmob_id = 10260
+        fbref_id = TEAMS[team_name]["fbref_id"]
+        fotmob_id = TEAMS[team_name]["fotmob_id"]
 
-        pl_url = pl_url.format(fbref_id=fbref_id, team_name=team_name)
-        comps_url = comps_url.format(fbref_id=fbref_id, team_name=team_name)
+        # pl = pl_url.format(fbref_id=fbref_id, team_name=team_name)
+        # comps_url = comps_url.format(fbref_id=fbref_id, team_name=team_name)
 
-        df_pl = get_info(pl_url)
+        df_pl = get_info(pl_url.format(fbref_id=fbref_id, team_name=team_name))
         df_pl.drop(df_pl.tail(2).index, inplace=True)
-        df_comps = get_info(comps_url)
+        df_comps = get_info(comps_url.format(fbref_id=fbref_id, team_name=team_name))
         pl_list.append(df_pl)
         comps_list.append(df_comps)
-        plot_goals(df_pl)
+        plot_single_unit(
+            df_pl, "Gls", "Goals", "Scored", team_name, "#C4961A", fotmob_id
+        )
+        plot_single_unit(
+            df_pl, "Ast", "Assists", "Made", team_name, "cadetblue", fotmob_id
+        )
         #     num_games = get_matches(url_game)
         #     df_players["club_id"] = fotmob_id
         #     df_list.append(df_players)
         #     df_players = format_data(df_players)
         #     plot_data(df_players, team_name, num_games, fotmob_id)
-        break
 
     # df_teams = pd.concat(df_list, axis=0, ignore_index=True)
     # df = format_data_all(df_teams)
