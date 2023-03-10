@@ -1,8 +1,10 @@
+import os
 import pandas as pd
-from teams import TEAMS
 import matplotlib.pyplot as plt
-from PIL import Image
 import urllib.request
+from PIL import Image
+
+from teams import TEAMS
 
 pd.options.mode.chained_assignment = None
 
@@ -260,6 +262,12 @@ def main():
 
     pl_list = []
     comps_list = []
+
+    if not os.path.isdir('figures/pl'):
+        os.makedirs('figures/pl')
+
+    if not os.path.isdir('figures/comps'):
+        os.makedirs('figures/comps')
 
     for team_name in TEAMS:
         fbref_id = TEAMS[team_name]["fbref_id"]
