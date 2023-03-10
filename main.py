@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import urllib.request
 
+pd.options.mode.chained_assignment = None
+
 fotmob_url_club = "https://images.fotmob.com/image_resources/logo/teamlogo/"
 fotmob_url_league = "https://images.fotmob.com/image_resources/logo/leaguelogo/"
 
@@ -26,6 +28,28 @@ def save_figure(fig_name, dpi, transparency, face_color, bbox):
         facecolor=face_color,
         bbox_inches=bbox,
     )
+
+
+def annotate_axis(ax):
+    ax.annotate(
+        "Stats from fbref.com",
+        (0, 0),
+        (0, -20),
+        fontsize=8,
+        xycoords="axes fraction",
+        textcoords="offset points",
+        va="top",
+    )
+    ax.annotate(
+        "Data Viz by @plvizstats || u/plvizstats",
+        (0, 0),
+        (0, -30),
+        fontsize=8,
+        xycoords="axes fraction",
+        textcoords="offset points",
+        va="top",
+    )
+    return ax
 
 
 def get_info(url):
@@ -70,7 +94,7 @@ def plot_single_unit(
             value + increment_value,
             index,
             str(value),
-            color=plot_color,
+            color="#000000",
             va="center",
             fontweight="bold",
         )
@@ -78,24 +102,91 @@ def plot_single_unit(
     logo_ax = fig.add_axes([0.60, 0.2, 0.2, 0.2])
     ax_logo(fotmob_id, logo_ax)
 
-    ax.annotate(
-        "Stats from fbref.com",
-        (0, 0),
-        (0, -20),
-        fontsize=8,
-        xycoords="axes fraction",
-        textcoords="offset points",
-        va="top",
+    annotate_axis(ax)
+
+    save_figure(
+        f"figures/pl/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
+        300,
+        False,
+        "#EFE9E6",
+        "tight",
     )
-    ax.annotate(
-        "Data Viz by @plvizstats || u/plvizstats",
-        (0, 0),
-        (0, -30),
-        fontsize=8,
-        xycoords="axes fraction",
-        textcoords="offset points",
-        va="top",
+
+    plt.close()
+
+
+def plot_stacked(df, column_name, label, descriptor, team_name, fotmob_id):
+    df = df[~df[column_name].isna()]
+    df[column_name] = df[column_name].astype(int)
+    df["Gls"] = df["Gls"].astype(int)
+    df["Ast"] = df["Ast"].astype(int)
+    df = df[df[column_name] != 0]
+    df = df.sort_values(column_name)
+
+    players = df.Player.values.tolist()
+    goals = df.Gls.values.tolist()
+    assists = df.Ast.values.tolist()
+
+    fig = plt.figure(figsize=(8, 10), dpi=300, facecolor="#EFE9E6")
+    ax = plt.subplot()
+    ax.set_facecolor("#EFE9E6")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.get_xaxis().set_ticks([])
+    ax.set_title(
+        f"{team_name.replace('-', ' ')} {label} {descriptor} 22/23 Premier League",
+        fontweight="bold",
+        fontsize=12,
     )
+    ax.set_xlabel(f"{label} {descriptor}", fontweight="bold")
+    ax.barh(players, goals, align="center", color="#C4961A", label="Goals")
+    ax.barh(
+        players, assists, align="center", left=goals, color="cadetblue", label="Assists"
+    )
+
+    increment_value = df[column_name].iloc[0] * 0.02
+    for index, value in enumerate(df[column_name]):
+        plt.text(
+            value + increment_value,
+            index,
+            str(value),
+            color="#000000",
+            va="center",
+            fontweight="bold",
+        )
+
+    for index, value in enumerate(goals):
+        if value == 0:
+            continue
+        plt.text(
+            value / 2,
+            index,
+            str(value),
+            color="cadetblue",
+            va="center",
+            fontweight="bold",
+        )
+
+    for index, value in enumerate(assists):
+        if value == 0:
+            continue
+        plt.text(
+            goals[index] + (value / 2),
+            index,
+            str(value),
+            color="#C4961A",
+            va="center",
+            fontweight="bold",
+        )
+
+    ax.legend(loc="lower right")
+
+    logo_ax = fig.add_axes([0.60, 0.2, 0.2, 0.2])
+    ax_logo(fotmob_id, logo_ax)
+
+    annotate_axis(ax)
 
     save_figure(
         f"figures/pl/{team_name.replace('-', '_').lower()}_{column_name.lower()}.png",
@@ -131,7 +222,10 @@ def main():
             df_pl, "Gls", "Goals", "Scored", team_name, "#C4961A", fotmob_id
         )
         plot_single_unit(
-            df_pl, "Ast", "Assists", "Made", team_name, "cadetblue", fotmob_id
+            df_pl, "Ast", "Assists", "Provided", team_name, "cadetblue", fotmob_id
+        )
+        plot_stacked(
+            df_pl, "G+A", "Goals + Assists", "Leaderboard", team_name, fotmob_id
         )
         #     num_games = get_matches(url_game)
         #     df_players["club_id"] = fotmob_id
@@ -146,3 +240,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# Add legend
+# Plot all teams together for goals, assists and g+a
+# Repeat for all comps
