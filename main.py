@@ -330,7 +330,7 @@ def main():
         label="Goals",
         plot_color="#C4961A",
         fotmob_id=47,
-        competition="pl",
+        competition="comps",
     )
     plot_single_unit(
         df=df_comps,
@@ -338,14 +338,14 @@ def main():
         label="Assists",
         plot_color="cadetblue",
         fotmob_id=47,
-        competition="pl",
+        competition="comps",
     )
     plot_stacked(
         df=df_comps,
         column_name="G+A",
         label="Goals + Assists",
         fotmob_id=47,
-        competition="pl",
+        competition="comps",
     )
 
 
