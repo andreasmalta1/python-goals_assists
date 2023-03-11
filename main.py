@@ -91,11 +91,14 @@ def minutes(df_pl, df_comps, team_name, matches_pl, matches_comp, fotmob_id):
 
     df_pl = get_minutes(df_pl)
     df_comps = get_minutes(df_comps)
-    pl_minutes_list.append(df_pl)
-    comps_minutes_list.append(df_comps)
 
     plt_minutes(df_pl, team_name, matches_pl, fotmob_id, "pl")
     plt_minutes(df_comps, team_name, matches_comp, fotmob_id, "comps")
+
+    df_pl["club_id"] = fotmob_id
+    df_comps["club_id"] = fotmob_id
+    pl_minutes_list.append(df_pl)
+    comps_minutes_list.append(df_comps)
 
     return pl_minutes_list, comps_minutes_list
 
@@ -117,8 +120,6 @@ def main():
 
         df_pl = get_info(pl_url.format(fbref_id=fbref_id, team_name=team_name))
         df_comps = get_info(comps_url.format(fbref_id=fbref_id, team_name=team_name))
-        df_pl["club_id"] = fotmob_id
-        df_comps["club_id"] = fotmob_id
         df_matches_pl = get_info(
             pl_games_url.format(fbref_id=fbref_id, team_name=team_name)
         )
@@ -194,3 +195,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# Fix issues with long names
+# Issue with getting minutes for all teams
