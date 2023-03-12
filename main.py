@@ -48,24 +48,15 @@ def get_minutes(df):
 
 
 def get_minutes_all(df):
-    df = df[["Player", "Nation", "Pos", "Age", "Min", "MP", "Starts", "90s", "club_id"]]
     df = df.sort_values(by="Min").reset_index(drop=True)
-    df = df[~df["Pos"].isna()]
-    df["Nation"] = [x.split(" ")[1].lower() for x in df["Nation"]]
     df["Min"] = [int(x) for x in df["Min"]]
     return df.tail(20)
 
 
 def goals_and_assists(df_pl, df_comps, team_name, fotmob_id):
-    pl_goal_list = []
-    comps_goal_list = []
-
     df_pl = get_goals_assists(df_pl)
     df_pl.drop(df_pl.tail(2).index, inplace=True)
     df_comps = get_goals_assists(df_comps)
-
-    pl_goal_list.append(df_pl)
-    comps_goal_list.append(df_comps)
 
     plt_g_a(df_pl, "Gls", "Goals", team_name, "#C4961A", fotmob_id, "pl")
     plt_g_a(df_pl, "Ast", "Assists", team_name, "cadetblue", fotmob_id, "pl")
@@ -82,13 +73,10 @@ def goals_and_assists(df_pl, df_comps, team_name, fotmob_id):
         "comps",
     )
 
-    return pl_goal_list, comps_goal_list
+    return df_pl, df_comps
 
 
 def minutes(df_pl, df_comps, team_name, matches_pl, matches_comp, fotmob_id):
-    pl_minutes_list = []
-    comps_minutes_list = []
-
     df_pl = get_minutes(df_pl)
     df_comps = get_minutes(df_comps)
 
@@ -97,10 +85,8 @@ def minutes(df_pl, df_comps, team_name, matches_pl, matches_comp, fotmob_id):
 
     df_pl["club_id"] = fotmob_id
     df_comps["club_id"] = fotmob_id
-    pl_minutes_list.append(df_pl)
-    comps_minutes_list.append(df_comps)
 
-    return pl_minutes_list, comps_minutes_list
+    return df_pl, df_comps
 
 
 def main():
@@ -113,6 +99,11 @@ def main():
         for category in ["gls", "ast", "g+a", "minutes"]:
             if not os.path.isdir(f"figures/{category}/{competition}"):
                 os.makedirs(f"figures/{category}/{competition}")
+
+    pl_goal_list = []
+    comps_goal_list = []
+    pl_minutes_list = []
+    comps_minutes_list = []
 
     for team_name in TEAMS:
         fbref_id = TEAMS[team_name]["fbref_id"]
@@ -129,13 +120,18 @@ def main():
         matches_pl = get_matches(df_matches_pl)
         matches_comp = get_matches(df_matches_comp)
 
-        pl_goal_list, comps_goal_list = goals_and_assists(
+        df_pl_goals, df_comps_goals = goals_and_assists(
             df_pl, df_comps, team_name, fotmob_id
         )
 
-        pl_minutes_list, comps_minutes_list = minutes(
+        df_pl_minutes, df_comps_minutes = minutes(
             df_pl, df_comps, team_name, matches_pl, matches_comp, fotmob_id
         )
+
+        pl_goal_list.append(df_pl_goals)
+        comps_goal_list.append(df_comps_goals)
+        pl_minutes_list.append(df_pl_minutes)
+        comps_minutes_list.append(df_comps_minutes)
 
     df_goals_pl = pd.concat(pl_goal_list, axis=0, ignore_index=True)
     df_goals_comps = pd.concat(comps_goal_list, axis=0, ignore_index=True)
