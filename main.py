@@ -111,6 +111,10 @@ def main():
 
         df_pl = get_info(pl_url.format(fbref_id=fbref_id, team_name=team_name))
         df_comps = get_info(comps_url.format(fbref_id=fbref_id, team_name=team_name))
+
+        if TEAMS[team_name].get("short_name"):
+            team_name = TEAMS[team_name].get("short_name")
+
         df_matches_pl = get_info(
             pl_games_url.format(fbref_id=fbref_id, team_name=team_name)
         )
@@ -123,7 +127,6 @@ def main():
         df_pl_goals, df_comps_goals = goals_and_assists(
             df_pl, df_comps, team_name, fotmob_id
         )
-
         df_pl_minutes, df_comps_minutes = minutes(
             df_pl, df_comps, team_name, matches_pl, matches_comp, fotmob_id
         )
@@ -191,8 +194,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# Fix issues with long names
-# Issue with getting minutes for all teams
-# Rename/move to new repo (python-pl_analysis)

@@ -4,7 +4,7 @@ from utils import annotate_axis, ax_logo, minutes_battery, save_figure
 
 
 def plt_minutes(df_final, team_name, num_games, team_id, competition):
-    comp_description = "All Competitions"
+    comp_description = "All Comps"
     if competition == "pl":
         comp_description = "Premier League"
 
@@ -134,7 +134,7 @@ def plt_minutes(df_final, team_name, num_games, team_id, competition):
     fig.text(
         x=0.15,
         y=0.91,
-        s=f"{team_name.replace('-', ' ')} 22/23 Minutes {comp_description} ({num_games} Games)",
+        s=f"{team_name.replace('-', ' ')} 22/23 {comp_description} ({num_games} Games)",
         ha="left",
         va="bottom",
         weight="bold",
@@ -155,9 +155,9 @@ def plt_minutes(df_final, team_name, num_games, team_id, competition):
 
 
 def plt_minutes_all(df, competition):
-    comp_description = "All Comps"
+    comp_description = "All Competitions"
     if competition == "pl":
-        comp_description = "PL"
+        comp_description = "Premier League"
 
     fig = plt.figure(figsize=(8, 10), dpi=300, facecolor="#EFE9E6")
     ax = plt.subplot()
@@ -281,7 +281,7 @@ def plt_minutes_all(df, competition):
     fig.text(
         x=0.15,
         y=0.91,
-        s=f"Most played Minutes 2022/2023 {comp_description}",
+        s=f"Minutes Played 2022/2023 {comp_description}",
         ha="left",
         va="bottom",
         weight="bold",
